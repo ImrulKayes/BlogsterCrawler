@@ -202,3 +202,4 @@ print 'Exiting Main Thread'
 blogFile.close()
 commentFile.close()
 
+
