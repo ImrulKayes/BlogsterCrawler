@@ -11,10 +11,13 @@ import threading
 
 
 def getPostComments(user):
+    
     global blogFile
     global blogFileLock
+    
     try:
         soup=BeautifulSoup(urllib2.urlopen("http://www.blogster.com/"+user+"/#posts"))
+        
         rawstr=str(soup)
         st1=rawstr.split("\n")
         for x in st1:
@@ -34,8 +37,7 @@ def getPostComments(user):
     if userid=='':
         print 'Userid for '+str(user)+'is null.'
         return
-    #f=open('blog.txt','wb')
-    #f1=open('comments.txt','wb')
+
     while True:
         try:
             result = json.load(urllib2.urlopen('http://www.blogster.com/ai/user-blog-list.api/'+str(int(time.time()))+'?user='+userid+'&page='+str(page)+'&'+'limit='+str(limit)))
@@ -51,36 +53,25 @@ def getPostComments(user):
                             title=''
                         url=str(blog['url'])
                         comments=str(blog['comments'])
-                        #summary=unicodedata.normalize('NFKD', blog['summary']).encode('ascii','ignore')
+
                         timestamp=str(blog['time'])
                         date=str(blog['date'])
                         id1=str(blog['id'])
                         st=user+sep+id1+sep+timestamp+sep+date+sep+timeago+sep+title+sep+comments+sep+url+sep
                         soup=BeautifulSoup(urllib2.urlopen(url))
-                        #soup=soup.encode('utf-8')
-                        #print url
                         category,tag,content=getPost(soup)
                         if content!='':
                             content=unicodedata.normalize('NFKD', content).encode('ascii','ignore')
                         st+=str(category)+sep+str(tag)+sep+content+"\n"
                         getComments(soup,user,timestamp,sep,url)
-                        #print st
-                        #blogFileLock.acquire()
                         blogFile.write(st)
-                        #blogFileLock.release()
-                        #f.write(st.encode('utf8'))
                 except Exception:
                     traceback.print_exc()
-                    print url
-                    #print blog
                     countException+=1
             count+=10
             if count>total:
                 break
             page=page+1
-            #print result
-            #print "\n\n"        
-            #print count
         except Exception:
             traceback.print_exc()
             print "Exception related to find the user's page:" +str(user)
@@ -97,7 +88,6 @@ def getPost(soup):
     for element in divContents:
         if element!='&nbsp;' and element!='\n':
             content+=element
-    #print st
     content=' '.join(content.split('\n'))
     # extracting related taggs
     try:
@@ -108,7 +98,6 @@ def getPost(soup):
                     break
         for a in parentDiv.findAll('a'):
             relatedTags=a.renderContents()
-            #print relatedTags
     except Exception:
         relatedTags="NA"
     # extracting categories
@@ -120,17 +109,14 @@ def getPost(soup):
                     break
         for a in parentDiv.findAll('a'):
             category=a.renderContents()
-            #print category
     except Exception:
         category="NA"
     return category,relatedTags,content
 
-#getComments(BeautifulSoup(urllib2.urlopen('http://www.blogster.com/bobbyboxtop/thought-for-the-day')),user,timestamp,sep,f1)
 # Extract comments
 def getComments(soup,user,timestamp,sep,url):
     global commentFile
     global commentFileLock
-    #soup=BeautifulSoup(urllib2.urlopen("http://www.blogster.com/bobbyboxtop/naked-secrets"))
     try:
         commentBoxes=soup.findAll("div", {"class": "comment-box"})+ soup.findAll("div", {"class": "comment-box comment-box-nested"})
         for comment in commentBoxes:
@@ -156,16 +142,11 @@ def getComments(soup,user,timestamp,sep,url):
             except Exception:
                 traceback.print_exc()
                 print 'Could not get commenter'+ str(url)                
-            #print commenter
-            #commentFileLock.acquire()
             try:
                 commentFile.write(unicodedata.normalize('NFKD', user+sep+timestamp+sep+url+sep+commenter+sep+commentTime+sep+commentContent).encode('ascii','ignore')+'\n')
             except Exception:
                 traceback.print_exc()
                 print 'Could not write a comment'+ str(url)
-            #commentFileLock.release()
-            #print user+sep+timestamp+sep+commenter+sep+commentTime+sep+commentContent+'\n'
-            #print '\n'
     except Exception:
         traceback.print_exc()
         print "In comments: main: "+str(user)+' url: '+str(url)
@@ -179,13 +160,9 @@ import threading
 threadNumber=20
 sampledNumber=0
 sampledNumberLock=threading.Lock()
-#fileOutputLock=threading.Lock()
-#fileOutput=open("/Users/imrul/Documents/BlogInfluence/BlogSter1.2/test/output.txt",'wb')
 blogFileLock=threading.Lock()
 commentFileLock=threading.Lock()
 totalUserCount=0
-#blogFile=open('/Users/imrul/Documents/BlogInfluence/BlogSter1.2/test/blog_1.txt','wb')
-#commentFile=open('/Users/imrul/Documents/BlogInfluence/BlogSter1.2/test/comments_1.txt','wb')
 blogFile=open('/home/imrul/blog/content/blog.txt','wb')
 commentFile=open('/home/imrul/blog/content/comment.txt','wb')
 class myThread (threading.Thread):
@@ -208,11 +185,7 @@ class myThread (threading.Thread):
                 if sampledNumber%10==0:
                     print 'Sampling now: '+str(sampledNumber)+', user: '+str(line)
                 getPostComments(str(line))
-                #fileOutputLock.acquire()
-                #fileOutput.write(line+'\n')
-                #fileOutputLock.release()
             count+=1         
-        #process_quque(self.threadID)
         print "Exiting " + self.name
 
 
@@ -226,7 +199,6 @@ for t in threads:
     t.join()
 
 print 'Exiting Main Thread'
-#fileOutput.close()
 blogFile.close()
 commentFile.close()
 
