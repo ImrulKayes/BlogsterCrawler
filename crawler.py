@@ -32,10 +32,8 @@ def getPostComments(user):
         countException=0
     except Exception:
         traceback.print_exc()
-        print 'Could not find user post:'+str(user)
         return
     if userid=='':
-        print 'Userid for '+str(user)+'is null.'
         return
 
     while True:
